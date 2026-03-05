@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>حاسبة المناسبات</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0c0a; --surf:#181614; --card:#1e1c18; --card2:#242119;
+  --border:rgba(201,169,110,.13); --border2:rgba(201,169,110,.26);
+  --gold:#C9A96E; --gold2:#dfc080; --gdim:rgba(201,169,110,.1);
+  --txt:#ede8df; --txt2:#8a7f6e; --txt3:#4e4538;
+  --red:#e05c4b; --green:#4caf82; --blue:#5b9bd5;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;direction:rtl;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.blob{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0}
+.b1{width:480px;height:480px;background:rgba(201,169,110,.055);top:-160px;right:-80px}
+.b2{width:360px;height:360px;background:rgba(224,92,75,.04);bottom:-80px;left:-60px}
+
+/* ─── HEADER ─── */
+header{position:relative;z-index:1;padding:44px 20px 32px;text-align:center;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(201,169,110,.04) 0%,transparent 100%)}
+.ornament{display:inline-flex;align-items:center;gap:10px;margin-bottom:18px}
+.orn-line{height:1px;width:36px;background:linear-gradient(90deg,transparent,var(--gold))}
+.orn-line.r{background:linear-gradient(90deg,var(--gold),transparent)}
+.orn-dia{width:7px;height:7px;background:var(--gold);transform:rotate(45deg)}
+h1{font-size:clamp(1.7rem,5.5vw,2.8rem);font-weight:900;letter-spacing:-1px;line-height:1}
+h1 em{font-style:normal;color:var(--gold)}
+.tagline{margin-top:8px;font-size:.82rem;color:var(--txt3);font-weight:400}
+
+/* ─── CLOCK WIDGET ─── */
+.clock-widget{
+  display:inline-grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:0;
+  margin-top:22px;
+  background:var(--surf);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  overflow:hidden;
+}
+.cw-block{padding:10px 18px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cw-block.center{border-right:1px solid var(--border);border-left:1px solid var(--border)}
+.cw-label{font-size:.58rem;font-weight:700;color:var(--txt3);letter-spacing:.8px;text-transform:uppercase}
+.cw-time{font-family:'Roboto Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--gold);letter-spacing:1px;direction:ltr}
+.cw-hijri{font-size:.82rem;font-weight:700;color:var(--txt);direction:rtl}
+.cw-greg{font-family:'Roboto Mono',monospace;font-size:.78rem;font-weight:600;color:var(--txt2);letter-spacing:.5px;direction:ltr}
+.pulse{display:inline-block;width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.6s ease-in-out infinite;margin-left:4px;vertical-align:middle}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+
+/* ─── MAIN ─── */
+main{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:28px 14px 80px}
+
+/* ─── ADD BUTTON ─── */
+.add-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;max-width:240px;margin:0 auto 24px;padding:13px 24px;background:var(--gold);color:#16120a;border:none;border-radius:12px;font-family:inherit;font-size:.92rem;font-weight:800;cursor:pointer;transition:all .2s;letter-spacing:.2px}
+.add-btn:hover{background:var(--gold2);box-shadow:0 4px 24px rgba(201,169,110,.22);transform:translateY(-1px)}
+.add-btn:active{transform:scale(.97)}
+.add-btn svg{width:15px;height:15px;flex-shrink:0}
+
+/* ─── EMPTY ─── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--txt3);font-size:.88rem}
+.empty-icon{font-size:2.8rem;margin-bottom:10px;opacity:.4}
+
+/* ─── CARDS ─── */
+.events-list{display:flex;flex-direction:column;gap:10px}
+.ev-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color .2s,box-shadow .2s;animation:cardIn .3s ease}
+@keyframes cardIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.ev-card:hover{border-color:var(--border2);box-shadow:0 2px 24px rgba(201,169,110,.05)}
+
+/* TOP ROW */
+.ev-top{display:flex;align-items:center;gap:10px;padding:13px 15px}
+.ev-emoji-btn{font-size:1.4rem;background:var(--card2);border:1px solid var(--border);border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+.ev-emoji-btn:active{transform:scale(1.2)}
+.ev-label-input{flex:1;background:transparent;border:none;outline:none;font-family:inherit;font-size:.95rem;font-weight:700;color:var(--txt);caret-color:var(--gold);border-bottom:1.5px solid transparent;transition:border-color .2s;padding:3px 0;direction:rtl;min-width:0}
+.ev-label-input:focus{border-bottom-color:var(--gold)}
+.ev-label-input::placeholder{color:var(--txt3);font-weight:400}
+.ev-del-btn{background:none;border:none;cursor:pointer;color:var(--txt3);padding:6px;border-radius:8px;transition:all .15s;display:flex;align-items:center;flex-shrink:0}
+.ev-del-btn:hover,.ev-del-btn:active{color:var(--red);background:rgba(224,92,75,.1)}
+
+/* DATE ROW — compact inline */
+.ev-dates{display:flex;align-items:center;gap:8px;padding:0 15px 13px;flex-wrap:wrap}
+.date-pill{display:flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--border);border-radius:9px;padding:6px 10px;flex:1;min-width:130px}
+.date-pill-icon{font-size:.8rem;flex-shrink:0;opacity:.7}
+.date-pill-inner{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.date-pill-label{font-size:.58rem;font-weight:700;color:var(--txt3);letter-spacing:.5px;text-transform:uppercase}
+.date-in{background:transparent;border:none;outline:none;font-family:'Roboto Mono',monospace;font-size:.78rem;font-weight:600;color:var(--txt2);width:100%;cursor:pointer;padding:0;direction:ltr;color-scheme:dark;transition:color .2s}
+.date-in:focus{color:var(--gold)}
+.date-in::-webkit-calendar-picker-indicator{filter:invert(.4);cursor:pointer;padding:0;margin:0;width:14px;height:14px}
+.date-arrow{color:var(--txt3);font-size:.7rem;flex-shrink:0;opacity:.5}
+
+/* RESULT */
+.ev-result{border-top:1px solid var(--border);padding:11px 15px;display:none;background:rgba(201,169,110,.02)}
+.ev-result.on{display:block}
+.result-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:7px}
+.chip{display:flex;flex-direction:column;align-items:center;padding:5px 11px;border-radius:9px;min-width:50px}
+.chip-n{font-family:'Roboto Mono',monospace;font-size:.98rem;font-weight:700;line-height:1.1}
+.chip-l{font-size:.56rem;font-weight:700;opacity:.7;margin-top:1px}
+.cy{background:rgba(76,175,130,.09);color:var(--green);border:1.5px solid rgba(76,175,130,.22)}
+.cm{background:rgba(91,155,213,.09);color:var(--blue);border:1.5px solid rgba(91,155,213,.22)}
+.cd{background:rgba(201,169,110,.09);color:var(--gold);border:1.5px solid rgba(201,169,110,.22)}
+.ch{background:rgba(224,92,75,.09);color:var(--red);border:1.5px solid rgba(224,92,75,.22)}
+.result-total{font-size:.68rem;color:var(--txt3);font-family:'Roboto Mono',monospace;direction:ltr;text-align:right}
+.result-total b{color:var(--gold);font-weight:700}
+.ann-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#ffd700,#ff9800);color:#3d2000;font-size:.6rem;font-weight:900;padding:3px 9px;border-radius:20px;animation:glow 2.2s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 6px rgba(255,152,0,.3)}50%{box-shadow:0 0 16px rgba(255,152,0,.6)}}
+.future-tag{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;color:var(--red);font-weight:700;background:rgba(224,92,75,.1);padding:3px 9px;border-radius:20px}
+
+/* ─── MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--border2);border-top:1px solid rgba(201,169,110,.35);border-radius:22px 22px 0 0;width:100%;max-width:500px;padding:24px 20px 40px;transform:translateY(40px);transition:transform .3s ease}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:4px;margin:0 auto 20px}
+.modal-title{font-size:1rem;font-weight:800;color:var(--txt);margin-bottom:18px;text-align:center;letter-spacing:.2px}
+
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:.65rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.m-input{width:100%;background:var(--surf);border:1.5px solid var(--border);border-radius:11px;padding:10px 13px;font-family:inherit;font-size:.92rem;font-weight:600;color:var(--txt);outline:none;direction:rtl;transition:border-color .2s;caret-color:var(--gold);color-scheme:dark}
+.m-input:focus{border-color:var(--gold)}
+.m-input::placeholder{color:var(--txt3);font-weight:400}
+
+/* Emoji grid */
+.eg{display:flex;flex-wrap:wrap;gap:5px}
+.eg-btn{font-size:1.2rem;width:37px;height:37px;border-radius:9px;border:1.5px solid transparent;background:var(--surf);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.eg-btn:hover,.eg-btn.sel{border-color:var(--gold);background:var(--gdim);transform:scale(1.1)}
+
+/* To-date toggle */
+.m-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:var(--surf);border-radius:11px;margin-bottom:14px;cursor:pointer;border:1.5px solid var(--border);transition:border-color .2s}
+.m-toggle-row.active{border-color:var(--gold)}
+.mtr-left{display:flex;flex-direction:column;gap:2px}
+.mtr-title{font-size:.88rem;font-weight:700;color:var(--txt)}
+.mtr-sub{font-size:.68rem;color:var(--txt3)}
+.mtr-knob{width:38px;height:21px;background:var(--card2);border:1.5px solid var(--border2);border-radius:100px;position:relative;flex-shrink:0;transition:all .2s}
+.mtr-knob::after{content:'';position:absolute;top:2px;right:3px;width:14px;height:14px;border-radius:50%;background:var(--txt3);transition:all .2s}
+.m-toggle-row.active .mtr-knob{background:var(--gdim);border-color:var(--gold)}
+.m-toggle-row.active .mtr-knob::after{background:var(--gold);right:auto;left:3px}
+.to-date-field{margin-bottom:14px;display:none;animation:fd .2s ease}
+.to-date-field.show{display:block}
+@keyframes fd{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.m-submit{width:100%;padding:14px;background:var(--gold);color:#15110a;border:none;border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:800;cursor:pointer;transition:all .2s;letter-spacing:.2px}
+.m-submit:hover{background:var(--gold2);box-shadow:0 4px 24px rgba(201,169,110,.22)}
+.m-submit:active{transform:scale(.98)}
+
+/* ─── SUMMARY ─── */
+.summary{display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-top:14px}
+.sstat{text-align:center}
+.sn{font-family:'Roboto Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--gold);line-height:1}
+.sl{font-size:.62rem;color:var(--txt3);margin-top:3px;font-weight:400}
+.sdiv{width:1px;height:28px;background:var(--border)}
+
+/* ─── EMOJI PICKER ─── */
+.ep{position:fixed;background:var(--card);border:1px solid var(--border2);border-radius:13px;padding:9px;box-shadow:0 12px 48px rgba(0,0,0,.55);display:flex;flex-wrap:wrap;gap:3px;width:218px;z-index:300;animation:pop .16s ease}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.ep-btn{font-size:1.2rem;width:34px;height:34px;border-radius:7px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s}
+.ep-btn:hover,.ep-btn:active{background:var(--card2)}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--green);color:#081f12;padding:9px 22px;border-radius:100px;font-size:.8rem;font-weight:800;box-shadow:0 4px 20px rgba(76,175,130,.3);transition:transform .3s ease;z-index:200;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:460px){
+  .clock-widget{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  .cw-block.center{border-right:none;border-left:none;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .ev-dates{flex-direction:column}
+  .date-pill{min-width:0}
+  .modal{padding:20px 16px 36px}
+}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<header>
+  <div class="ornament">
+    <div class="orn-line"></div><div class="orn-dia"></div><div class="orn-line r"></div>
+  </div>
+  <h1>حاسبة <em>المناسبات</em></h1>
+  <p class="tagline">سجّل لحظاتك الثمينة — محفوظة تلقائياً في جهازك</p>
+
+  <div class="clock-widget">
+    <div class="cw-block">
+      <span class="cw-label">التاريخ الهجري</span>
+      <span class="cw-hijri" id="hijri-date">—</span>
+    </div>
+    <div class="cw-block center">
+      <span class="cw-label">TIME <span class="pulse"></span></span>
+      <span class="cw-time" id="clock-time">--:--:--</span>
+    </div>
+    <div class="cw-block">
+      <span class="cw-label">GREGORIAN</span>
+      <span class="cw-greg" id="greg-date">—</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <button class="add-btn" onclick="openModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    إضافة مناسبة
+  </button>
+
+  <div id="events-list" class="events-list"></div>
+  <div id="empty-state" class="empty-state" style="display:none">
+    <div class="empty-icon">🗓️</div>
+    <div>لا توجد مناسبات بعد<br>اضغط "إضافة مناسبة" للبدء</div>
+  </div>
+
+  <div class="summary" id="summary" style="display:none">
+    <div class="sstat"><div class="sn" id="sc">0</div><div class="sl">مناسبة</div></div>
+    <div class="sdiv"></div>
+    <div class="sstat"><div class="sn" id="sa">0</div><div class="sl">ذكرى اليوم 🎉</div></div>
+    <div class="sdiv"></div>
+    <div class="sstat"><div class="sn" id="sm">—</div><div class="sl">أطول (سنوات)</div></div>
+    <div class="sdiv"></div>
+    <div class="sstat"><div class="sn" id="sd">0</div><div class="sl">إجمالي الأيام</div></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="bgClose(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✦ إضافة مناسبة</div>
+
+    <div class="fg">
+      <label>الأيقونة</label>
+      <div class="eg" id="eg"></div>
+    </div>
+    <div class="fg">
+      <label>اسم المناسبة</label>
+      <input class="m-input" id="m-label" type="text" placeholder="مثل: زواجي، ميلاد محمد..."/>
+    </div>
+    <div class="fg">
+      <label>تاريخ البدء</label>
+      <input class="m-input" id="m-from" type="date"/>
+    </div>
+
+    <div class="m-toggle-row" id="to-toggle" onclick="toggleTo()">
+      <div class="mtr-left">
+        <div class="mtr-title">إضافة تاريخ نهاية؟</div>
+        <div class="mtr-sub">للإجازات، المشاريع، الفترات المحددة</div>
+      </div>
+      <div class="mtr-knob" id="mtr-knob"></div>
+    </div>
+
+    <div class="to-date-field" id="to-date-field">
+      <div class="fg" style="margin:0">
+        <label>تاريخ النهاية</label>
+        <input class="m-input" id="m-to" type="date"/>
+      </div>
+    </div>
+
+    <button class="m-submit" onclick="submitModal()">إضافة ✦</button>
+  </div>
+</div>
+
+<!-- Emoji picker -->
+<div class="ep" id="ep" style="display:none"></div>
+<div class="toast" id="toast">✓ تم الحفظ</div>
+
+<script>
+const EMOJIS=['💍','👶','💑','🤝','🏢','🎓','🏠','✈️','🎂','❤️','🌟','⭐','🎯','🏆','📅','🌙','☀️','🌸','🎉','🎊','👨‍👩‍👧','👨‍👩‍👦','💼','📖','🩺','⚽','🎵','🌍','🕌','🤲','🧒','👦','👧','🏡','🚗','🌴','💪','🎤','🖥️','🐣'];
+const KEY='mnasabat_v5';
+let rows=[],etgt=null,toastTmr,selEm='📅',hasTo=false;
+
+/* ── STORAGE ── */
+function save(){try{localStorage.setItem(KEY,JSON.stringify(rows));showToast()}catch(e){}}
+function load(){try{const d=localStorage.getItem(KEY);if(d)rows=JSON.parse(d)}catch(e){rows=[]}}
+function showToast(){const t=document.getElementById('toast');t.classList.add('show');clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.classList.remove('show'),1500)}
+
+/* ── CLOCK ── */
+function tick(){
+  const now=new Date();
+  // Time — English (HH:MM:SS)
+  document.getElementById('clock-time').textContent=
+    now.toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  // Gregorian — English
+  document.getElementById('greg-date').textContent=
+    now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  // Hijri — Arabic
+  document.getElementById('hijri-date').textContent=
+    now.toLocaleDateString('ar-SA-u-ca-islamic',{day:'numeric',month:'long',year:'numeric'});
+}
+setInterval(tick,1000);tick();
+
+/* ── MODAL ── */
+function openModal(){
+  selEm='📅';hasTo=false;
+  ['m-label','m-from','m-to'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('to-toggle').classList.remove('active');
+  document.getElementById('to-date-field').classList.remove('show');
+  buildEG();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-label').focus(),320);
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open')}
+function bgClose(e){if(e.target===document.getElementById('modal-overlay'))closeModal()}
+
+function buildEG(){
+  document.getElementById('eg').innerHTML=EMOJIS.map(em=>
+    `<button class="eg-btn${em===selEm?' sel':''}" onclick="pickModalEm('${em}')">${em}</button>`
+  ).join('');
+}
+function pickModalEm(em){
+  selEm=em;
+  document.querySelectorAll('.eg-btn').forEach(b=>b.classList.toggle('sel',b.textContent===em));
+}
+function toggleTo(){
+  hasTo=!hasTo;
+  document.getElementById('to-toggle').classList.toggle('active',hasTo);
+  document.getElementById('to-date-field').classList.toggle('show',hasTo);
+}
+function submitModal(){
+  const label=document.getElementById('m-label').value.trim();
+  const from=document.getElementById('m-from').value;
+  const to=hasTo?document.getElementById('m-to').value:'';
+  if(!label){document.getElementById('m-label').style.animation='none';document.getElementById('m-label').offsetHeight;document.getElementById('m-label').style.animation='shake .4s ease';document.getElementById('m-label').focus();return}
+  if(!from){document.getElementById('m-from').style.animation='none';document.getElementById('m-from').offsetHeight;document.getElementById('m-from').style.animation='shake .4s ease';document.getElementById('m-from').focus();return}
+  rows.push({id:Date.now()+Math.random(),label,emoji:selEm,from,to});
+  closeModal();render();save();
+}
+
+/* ── RENDER ── */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function render(){
+  const list=document.getElementById('events-list');
+  const empty=document.getElementById('empty-state');
+  const sumbar=document.getElementById('summary');
+  if(!rows.length){list.innerHTML='';empty.style.display='block';sumbar.style.display='none';return}
+  empty.style.display='none';list.innerHTML='';
+
+  rows.forEach(r=>{
+    const wrap=document.createElement('div');
+    wrap.className='ev-card';wrap.dataset.id=r.id;
+
+    const toField=r.to
+      ?`<div class="date-pill">
+          <span class="date-pill-icon">🏁</span>
+          <div class="date-pill-inner">
+            <span class="date-pill-label">TO DATE</span>
+            <input type="date" class="date-in" value="${r.to}" onchange="setF(${r.id},'to',this.value)"/>
+          </div>
+        </div>`
+      :'';
+
+    wrap.innerHTML=
+      `<div class="ev-top">
+        <button class="ev-emoji-btn" onclick="openEP(event,${r.id})">${r.emoji}</button>
+        <input class="ev-label-input" value="${esc(r.label)}" placeholder="اسم المناسبة..." oninput="setF(${r.id},'label',this.value)"/>
+        <button class="ev-del-btn" onclick="delRow(${r.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="ev-dates">
+        <div class="date-pill">
+          <span class="date-pill-icon">📅</span>
+          <div class="date-pill-inner">
+            <span class="date-pill-label">FROM DATE</span>
+            <input type="date" class="date-in" value="${r.from}" onchange="setF(${r.id},'from',this.value)"/>
+          </div>
+        </div>
+        ${toField}
+      </div>
+      <div class="ev-result" id="res-${r.id}"></div>`;
+
+    list.appendChild(wrap);
+    calcRes(r.id);
+  });
+  calcSum();
+}
+
+function setF(id,fld,val){
+  const r=rows.find(r=>r.id===id);
+  if(r){r[fld]=val;calcRes(id);calcSum();save()}
+}
+function delRow(id){rows=rows.filter(r=>r.id!==id);render();save()}
+
+/* ── CALC ── */
+function calcRes(id){
+  const r=rows.find(r=>r.id===id);
+  const el=document.getElementById('res-'+id);
+  if(!r||!el)return;
+  if(!r.from){el.classList.remove('on');el.innerHTML='';return}
+  const s=new Date(r.from+'T00:00:00');
+  const e=r.to?new Date(r.to+'T00:00:00'):new Date();
+  if(isNaN(s.getTime())){el.classList.remove('on');return}
+  e.setHours(0,0,0,0);
+  const fut=e<s;
+  const[a,b]=fut?[e,s]:[s,e];
+  let Y=b.getFullYear()-a.getFullYear();
+  let M=b.getMonth()-a.getMonth();
+  let D=b.getDate()-a.getDate();
+  if(D<0){M--;D+=new Date(b.getFullYear(),b.getMonth(),0).getDate()}
+  if(M<0){Y--;M+=12}
+  const ms=Math.abs(b-a);
+  const tD=Math.floor(ms/86400000);
+  const tH=Math.floor(ms/3600000);
+  const now=new Date();
+  const isAnn=!r.to&&s.getMonth()===now.getMonth()&&s.getDate()===now.getDate();
+  const liveH=!r.to?(23-now.getHours()):null;
+
+  let html='<div class="result-chips">';
+  if(fut)html+=`<span class="future-tag">⏳ بعد</span>`;
+  if(isAnn)html+=`<span class="ann-badge">🎉 ذكرى اليوم!</span>`;
+  if(Y>0)html+=chip(Y,'سنة','cy');
+  if(M>0)html+=chip(M,'شهر','cm');
+  html+=chip(D,'يوم','cd');
+  if(liveH!==null)html+=chip(liveH,'ساعة','ch');
+  html+=`</div><div class="result-total">${tD.toLocaleString()} days &nbsp;·&nbsp; ${tH.toLocaleString()} hrs total</div>`;
+  el.innerHTML=html;el.classList.add('on');
+}
+function chip(n,l,c){return`<div class="chip ${c}"><span class="chip-n">${n}</span><span class="chip-l">${l}</span></div>`}
+setInterval(()=>{rows.forEach(r=>{if(!r.to)calcRes(r.id)});calcSum()},1000);
+
+/* ── SUMMARY ── */
+function calcSum(){
+  if(!rows.length)return;
+  document.getElementById('summary').style.display='flex';
+  const now=new Date();let ann=0,maxY=0,totD=0;
+  rows.forEach(r=>{
+    if(!r.from)return;
+    const s=new Date(r.from+'T00:00:00');if(isNaN(s.getTime()))return;
+    if(s.getMonth()===now.getMonth()&&s.getDate()===now.getDate())ann++;
+    totD+=Math.floor(Math.abs(now-s)/86400000);
+    const y=now.getFullYear()-s.getFullYear();if(y>maxY)maxY=y;
+  });
+  document.getElementById('sc').textContent=rows.length;
+  document.getElementById('sa').textContent=ann;
+  document.getElementById('sm').textContent=maxY||'—';
+  document.getElementById('sd').textContent=totD.toLocaleString();
+}
+
+/* ── EMOJI PICKER (on cards) ── */
+function openEP(e,id){
+  e.stopPropagation();etgt=id;
+  const p=document.getElementById('ep');
+  p.innerHTML=EMOJIS.map(em=>`<button class="ep-btn" onclick="pickCardEm('${em}')">${em}</button>`).join('');
+  const r=e.currentTarget.getBoundingClientRect();
+  let top=r.bottom+window.scrollY+6;
+  let left=r.left;
+  if(left+218>window.innerWidth)left=window.innerWidth-224;
+  if(left<6)left=6;
+  if(top+180>window.scrollY+window.innerHeight)top=r.top+window.scrollY-186;
+  p.style.top=top+'px';p.style.left=left+'px';p.style.display='flex';
+}
+function pickCardEm(em){
+  const r=rows.find(r=>r.id===etgt);
+  if(r){r.emoji=em;const b=document.querySelector(`[data-id="${etgt}"] .ev-emoji-btn`);if(b)b.textContent=em;save()}
+  document.getElementById('ep').style.display='none';
+}
+document.addEventListener('click',()=>document.getElementById('ep').style.display='none');
+
+/* ── INIT ── */
+load();
+if(!rows.length){
+  rows=[
+    {id:1,label:'زواجي',emoji:'💍',from:'2018-03-15',to:''},
+    {id:2,label:'ميلاد أول أولادي',emoji:'👶',from:'2020-07-22',to:''},
+    {id:3,label:'دخول الشركة',emoji:'🏢',from:'2015-09-01',to:''},
+    {id:4,label:'تخرجي من الجامعة',emoji:'🎓',from:'2014-06-10',to:''},
+  ];
+}
+render();
+</script>
+</body>
+</html>
