@@ -192,37 +192,6 @@ h1 span{color:var(--gold)}
 }
 
 /* ═══════════════════════════════════════
-   STATS BAR
-═══════════════════════════════════════ */
-.stats-bar{
-  display:flex;align-items:stretch;
-  background:var(--card);
-  border-bottom:1px solid var(--border);
-  overflow-x:auto;
-  scrollbar-width:none;
-}
-.stats-bar::-webkit-scrollbar{display:none}
-.stat-item{
-  flex:1;min-width:80px;
-  padding:14px 16px;
-  display:flex;flex-direction:column;
-  align-items:center;gap:3px;
-  border-left:1px solid var(--border);
-  transition:background .15s;
-}
-.stat-item:last-child{border-left:none}
-.stat-n{
-  font-family:'DM Mono',monospace;
-  font-size:1.3rem;font-weight:500;
-  color:var(--gold);line-height:1;
-}
-.stat-l{
-  font-size:.58rem;font-weight:500;
-  color:var(--ink3);text-align:center;
-  white-space:nowrap;
-}
-
-/* ═══════════════════════════════════════
    TOOLBAR
 ═══════════════════════════════════════ */
 .toolbar{
@@ -354,6 +323,7 @@ main{max-width:680px;margin:0 auto;padding:16px 14px 100px}
   display:flex;align-items:center;flex-shrink:0;
 }
 .card-del:hover{color:var(--red);background:rgba(192,57,43,.08)}
+
 
 /* Date row */
 .card-dates{display:flex;gap:8px;padding:0 14px 12px;flex-wrap:wrap}
@@ -806,13 +776,6 @@ body.t-dark .ms,body.t-midnight .ms{color-scheme:dark}
 </header>
 
 <!-- ══ STATS BAR ══ -->
-<div class="stats-bar" id="stats-bar" style="display:none">
-  <div class="stat-item"><div class="stat-n" id="s-count">0</div><div class="stat-l">مناسبة</div></div>
-  <div class="stat-item"><div class="stat-n" id="s-ann">0</div><div class="stat-l">ذكرى اليوم 🎉</div></div>
-  <div class="stat-item"><div class="stat-n" id="s-max">—</div><div class="stat-l">أطول (سنة)</div></div>
-  <div class="stat-item"><div class="stat-n" id="s-days">0</div><div class="stat-l">إجمالي أيام</div></div>
-</div>
-
 <!-- ══ TOOLBAR ══ -->
 <div class="toolbar">
   <button class="btn-add" onclick="openModal()">
@@ -824,6 +787,12 @@ body.t-dark .ms,body.t-midnight .ms{color-scheme:dark}
       <circle cx="9" cy="5" r="1.2" fill="currentColor"/><circle cx="15" cy="5" r="1.2" fill="currentColor"/>
       <circle cx="9" cy="12" r="1.2" fill="currentColor"/><circle cx="15" cy="12" r="1.2" fill="currentColor"/>
       <circle cx="9" cy="19" r="1.2" fill="currentColor"/><circle cx="15" cy="19" r="1.2" fill="currentColor"/>
+    </svg>
+  </button>
+  <button class="btn-icon" onclick="shareAll()" title="مشاركة الكل">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
     </svg>
   </button>
   <button class="btn-icon" onclick="openSettings()" title="الإعدادات">
@@ -912,6 +881,16 @@ body.t-dark .ms,body.t-midnight .ms{color-scheme:dark}
       <div class="srow">
         <div class="srl"><div class="srt">الإجمالي</div><div class="srs">مجموع الأيام والساعات</div></div>
         <div class="knob on" id="tog-total" onclick="togP('showTotal',this)"></div>
+      </div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">النسخ الاحتياطي</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onclick="exportData()" style="padding:11px;background:var(--goldbg2);border:1.5px solid var(--gold);border-radius:11px;font-family:'Tajawal';font-size:.84rem;font-weight:700;color:var(--gold);cursor:pointer;width:100%">📤 تصدير البيانات (نسخة احتياطية)</button>
+        <label style="padding:11px;background:var(--bg2);border:1.5px solid var(--border);border-radius:11px;font-family:'Tajawal';font-size:.84rem;font-weight:700;color:var(--ink2);cursor:pointer;width:100%;text-align:center;display:block">
+          📥 استيراد بيانات
+          <input type="file" accept=".json" onchange="importData(event)" style="display:none"/>
+        </label>
       </div>
     </div>
   </div>
@@ -1063,7 +1042,30 @@ function togP(k,el){prefs[k]=!prefs[k];el.classList.toggle('on',prefs[k]);saveP(
 function openSettings(){document.getElementById('settings-ov').classList.add('open')}
 function bgCloseS(e){if(e.target===document.getElementById('settings-ov'))document.getElementById('settings-ov').classList.remove('open')}
 
-/* ── DRAG ── */
+/* ── BACKUP / RESTORE ── */
+function exportData(){
+  const data=JSON.stringify({rows,exported:new Date().toISOString()},null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(data);
+  a.download='manasabati-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const imported=data.rows||data;
+      if(!Array.isArray(imported))throw new Error('invalid');
+      if(!confirm(`استيراد ${imported.length} مناسبة؟ سيتم استبدال البيانات الحالية.`))return;
+      rows=imported;save();render();
+      document.getElementById('settings-ov').classList.remove('open');
+    }catch(err){alert('الملف غير صالح — تأكد أنه نسخة احتياطية من مناسباتي')}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
 function toggleDrag(){
   dragMode=!dragMode;
   document.getElementById('drag-btn').classList.toggle('on',dragMode);
@@ -1178,10 +1180,9 @@ function render(){
   const list=document.getElementById('events-list');
   const empty=document.getElementById('empty-state');
   const sumCard=document.getElementById('summary-card');
-  const statsBar=document.getElementById('stats-bar');
   if(!rows.length){
     list.innerHTML='';empty.style.display='block';
-    sumCard.style.display='none';statsBar.style.display='none';
+    sumCard.style.display='none';
     return;
   }
   empty.style.display='none';list.innerHTML='';
@@ -1233,6 +1234,49 @@ function render(){
 }
 function setF(id,fld,val){const r=rows.find(r=>r.id===id);if(r){r[fld]=val;calcRes(id);calcSum();save()}}
 function delRow(id){rows=rows.filter(r=>r.id!==id);render();save()}
+
+/* ── SHARE ── */
+/* ── SHARE ALL ── */
+function shareAll(){
+  if(!rows.length)return;
+  const now=new Date();now.setHours(0,0,0,0);
+  const lines=rows.map(r=>{
+    if(!r.from)return null;
+    const s=new Date(r.from+'T00:00:00');if(isNaN(s.getTime()))return null;
+    const fut=now<s;
+    const a=fut?now:s,b=fut?s:now;
+    let Y=b.getFullYear()-a.getFullYear(),M=b.getMonth()-a.getMonth(),D=b.getDate()-a.getDate();
+    if(D<0){M--;D+=new Date(b.getFullYear(),b.getMonth(),0).getDate()}
+    if(M<0){Y--;M+=12}
+    const gregStr=s.toLocaleDateString('ar-SA-u-ca-gregory',{day:'numeric',month:'long',year:'numeric'});
+    const diff=fut
+      ?`⏳ بعد ${Y>0?Y+' سنة ':''}${M>0?M+' شهر ':''}${D} يوم`
+      :`${Y>0?Y+' سنة ':''}${M>0?M+' شهر ':''}${D} يوم`;
+    return`${r.emoji} ${r.label} — ${gregStr}\n   ${diff}`;
+  }).filter(Boolean);
+  const text=`📋 *مناسباتي*\n\n${lines.join('\n\n')}\n\n—\nمن تطبيق مناسباتي`;
+  if(navigator.share){
+    navigator.share({text}).catch(()=>copyText(text));
+  } else {
+    copyText(text);
+  }
+}
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=>showToastMsg('تم النسخ ✓')).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');ta.remove();
+    showToastMsg('تم النسخ ✓');
+  });
+}
+function showToastMsg(msg){
+  const t=document.getElementById('toast');
+  t.lastElementChild.textContent=' '+msg;
+  t.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr=setTimeout(()=>{t.classList.remove('show');t.lastElementChild.textContent=' تم الحفظ'},2200);
+}
 
 /* ── CALC ── */
 function calcRes(id){
@@ -1305,9 +1349,8 @@ setInterval(()=>{rows.forEach(r=>{if(!r.to)calcRes(r.id)});calcSum()},1000);
 /* ── SUMMARY ── */
 function calcSum(){
   const sumCard=document.getElementById('summary-card');
-  const statsBar=document.getElementById('stats-bar');
   if(!rows.length)return;
-  sumCard.style.display='block';statsBar.style.display='flex';
+  sumCard.style.display='block';
   const now=new Date();let ann=0,maxY=0,totD=0;
   rows.forEach(r=>{
     if(!r.from)return;const s=new Date(r.from+'T00:00:00');if(isNaN(s.getTime()))return;
@@ -1316,10 +1359,11 @@ function calcSum(){
     const y=now.getFullYear()-s.getFullYear();if(y>maxY)maxY=y;
   });
   const fmt=n=>n.toLocaleString();
-  ['sc','s-count'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=rows.length});
-  ['sa','s-ann'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ann});
-  ['sm','s-max'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=maxY||'—'});
-  ['sd','s-days'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=fmt(totD)});
+  const el=id=>document.getElementById(id);
+  if(el('sc'))el('sc').textContent=rows.length;
+  if(el('sa'))el('sa').textContent=ann;
+  if(el('sm'))el('sm').textContent=maxY||'—';
+  if(el('sd'))el('sd').textContent=fmt(totD);
 }
 
 /* ── TIMELINE ── */
