@@ -965,7 +965,7 @@ body.t-dark .ms,body.t-midnight .ms{color-scheme:dark}
 <script>
 const EMOJIS=['💍','👶','💑','🤝','🏢','🎓','🏠','✈️','🎂','❤️','🌟','⭐','🎯','🏆','📅','🌙','☀️','🌸','🎉','🎊','👨‍👩‍👧','👨‍👩‍👦','💼','📖','🩺','⚽','🎵','🌍','🕌','🤲','🧒','👦','👧','🏡','🚗','🌴','💪','🎤','🖥️','🐣'];
 const HM=['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
-const KEY='mnasabat_v9', PKEY='mnasabat_p9';
+const KEY='mnasabat_v8', PKEY='mnasabat_p8';
 let rows=[], prefs={theme:'default',fs:1,showHijri:false,showHours:true,showTotal:true};
 let selEm='💍', hasTo=false, calT='m', etgt=null, toastTmr;
 let dragMode=false, dragSrc=null, dragOver=null, touchCard=null, touchClone=null, touchOffY=0;
@@ -1022,9 +1022,18 @@ function hStr(date){
 
 /* ── STORAGE ── */
 function save(){try{localStorage.setItem(KEY,JSON.stringify(rows));showToast()}catch(e){}}
-function load(){try{const d=localStorage.getItem(KEY);if(d)rows=JSON.parse(d)}catch(e){rows=[]}}
+function load(){
+  for(const k of [KEY,'mnasabat_v9','mnasabat_v7','mnasabat_v6']){
+    try{const d=localStorage.getItem(k);if(d){rows=JSON.parse(d);if(k!==KEY){localStorage.setItem(KEY,d);localStorage.removeItem(k)}return}}catch(e){}
+  }
+  rows=[];
+}
 function saveP(){try{localStorage.setItem(PKEY,JSON.stringify(prefs))}catch(e){}}
-function loadP(){try{const d=localStorage.getItem(PKEY);if(d)prefs={...prefs,...JSON.parse(d)}}catch(e){}}
+function loadP(){
+  for(const k of [PKEY,'mnasabat_p9','mnasabat_p7']){
+    try{const d=localStorage.getItem(k);if(d){prefs={...prefs,...JSON.parse(d)};if(k!==PKEY){localStorage.setItem(PKEY,d);localStorage.removeItem(k)}return}}catch(e){}
+  }
+}
 function showToast(){const t=document.getElementById('toast');t.classList.add('show');clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.classList.remove('show'),1400)}
 
 /* ── CLOCK ── */
@@ -1357,14 +1366,6 @@ document.addEventListener('click',()=>document.getElementById('ep').style.displa
 
 /* ── INIT ── */
 loadP();load();initIntl();applyPrefs();
-if(!rows.length){
-  rows=[
-    {id:1,label:'زواجي',emoji:'💍',from:'2018-03-15',to:'',calT:'m'},
-    {id:2,label:'ميلاد أول أولادي',emoji:'👶',from:'2020-07-22',to:'',calT:'m'},
-    {id:3,label:'دخول الشركة',emoji:'🏢',from:'2015-09-01',to:'',calT:'m'},
-    {id:4,label:'تخرجي من الجامعة',emoji:'🎓',from:'2014-06-10',to:'',calT:'m'},
-  ];
-}
 render();tick();
 </script>
 </body>
